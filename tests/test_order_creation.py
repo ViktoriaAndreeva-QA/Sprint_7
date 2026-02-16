@@ -20,7 +20,7 @@ class TestCreateOrder:
     ])
     @allure.title('Создание заказа с цветом {color}')
     @allure.description('Проверка создания заказа с разными вариантами цветов')
-    def test_create_order_with_different_colors_success(self, color, delete_order):
+    def test_create_order_with_different_colors_success(self, color, auto_delete_order):
         with allure.step('Сгенерировать данные заказа'):
             order_data = generate_order_data()
             order_data["color"] = color
@@ -32,4 +32,4 @@ class TestCreateOrder:
             assert "track" in response.json()
 
         track = response.json()["track"]
-        delete_order(track)
+        auto_delete_order(track)

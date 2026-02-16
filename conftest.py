@@ -36,30 +36,50 @@ def create_courier():
 # ========== ФИКСТУРЫ ДЛЯ УДАЛЕНИЯ ==========
 
 @pytest.fixture
-def delete_courier():
-    """Возвращает функцию для удаления курьера по ID"""
-    def _delete_courier(courier_id):
+def auto_delete_courier():
+    """Фикстура сама отслеживает курьеров и удаляет после теста"""
+    created_couriers = []
+    
+    def track_courier(login, password):
+        """Получает ID курьера и сохраняет для удаления"""
+        login_payload = {"login": login, "password": password}
+        login_response = requests.post(f"{BASE_URL}{COURIER_LOGIN_ENDPOINT}", data=login_payload)
+        courier_id = login_response.json()["id"]
+        created_couriers.append(courier_id)
+        return courier_id
+    
+    yield track_courier
+    
+    # АВТОМАТИЧЕСКОЕ УДАЛЕНИЕ ПОСЛЕ ТЕСТА
+    for courier_id in created_couriers:
         params = {"id": courier_id}
-        response = requests.delete(f"{BASE_URL}{COURIER_ENDPOINT}", params=params)
-        return response.status_code == 200
-    return _delete_courier
+        requests.delete(f"{BASE_URL}{COURIER_ENDPOINT}", params=params)
 
+
+# ========== ФИКСТУРА ДЛЯ АВТООТМЕНЫ ЗАКАЗОВ ==========
 
 @pytest.fixture
-def delete_order():
-    """Возвращает функцию для отмены заказа по track"""
-    def _delete_order(track):
+def auto_delete_order():
+    """Фикстура сама отслеживает заказы и отменяет после теста"""
+    created_orders = []
+    
+    def track_order(track):
+        """Сохраняет track заказа для отмены"""
+        created_orders.append(track)
+        return track
+    
+    yield track_order
+    
+    # АВТОМАТИЧЕСКАЯ ОТМЕНА ПОСЛЕ ТЕСТА
+    for track in created_orders:
         payload = {"track": track}
-        response = requests.put(f"{BASE_URL}{ORDERS_CANCEL_ENDPOINT}", json=payload)
-        return response.status_code == 200
-    return _delete_order
+        requests.put(f"{BASE_URL}{ORDERS_CANCEL_ENDPOINT}", json=payload)
 
 
 # ========== КОМБИНИРОВАННАЯ ФИКСТУРА (создание + автоудаление) ==========
 
 @pytest.fixture
-def created_courier(create_courier, delete_courier):
+def created_courier(create_courier):
     """Создает курьера перед тестом и автоматически удаляет после"""
     courier = create_courier
     yield courier
-    delete_courier(courier["id"])

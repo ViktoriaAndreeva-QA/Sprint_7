@@ -17,7 +17,10 @@ class TestLoginCourier:
 
     @allure.title('Успешный логин курьера')
     @allure.description('Проверка авторизации с существующими логином и паролем')
-    def test_login_courier_with_existing_login_and_password_success(self, created_courier):
+    def test_login_courier_with_existing_login_and_password_success(self, created_courier, auto_delete_courier):
+        with allure.step('Зарегистрировать курьера для автоудаления'):
+            auto_delete_courier(created_courier["login"], created_courier["password"])
+
         with allure.step('Отправить запрос на логин'):
             payload = {
                 "login": created_courier["login"],
@@ -33,7 +36,10 @@ class TestLoginCourier:
     @pytest.mark.parametrize("missing_field", ["login", "password"])
     @allure.title('Логин без обязательного поля')
     @allure.description('Проверка ошибки при отсутствии логина или пароля')
-    def test_login_courier_with_missing_required_field_fails(self, created_courier, missing_field):
+    def test_login_courier_with_missing_required_field_fails(self, created_courier, missing_field, auto_delete_courier):
+        with allure.step('Зарегистрировать курьера для автоудаления'):
+            auto_delete_courier(created_courier["login"], created_courier["password"])
+
         with allure.step(f'Отправить запрос без поля {missing_field}'):
             payload = {
                 "login": created_courier["login"],
@@ -53,7 +59,10 @@ class TestLoginCourier:
     ])
     @allure.title('Логин с неправильными данными')
     @allure.description('Проверка ошибки при неправильном логине или пароле')
-    def test_login_courier_with_wrong_credentials_fails(self, created_courier, field, wrong_value):
+    def test_login_courier_with_wrong_credentials_fails(self, created_courier, field, wrong_value, auto_delete_courier):
+        with allure.step('Зарегистрировать курьера для автоудаления'):
+            auto_delete_courier(created_courier["login"], created_courier["password"])
+
         with allure.step(f'Отправить запрос с неправильным {field}'):
             payload = {
                 "login": created_courier["login"],
